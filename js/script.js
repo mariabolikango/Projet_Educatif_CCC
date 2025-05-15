@@ -1,121 +1,142 @@
- // ========== CONFIGURATION ========== //
- const TIME_LIMIT = 60; // 3 minutes en secondes
- const CLICKS_TO_LEVEL_UP = 3; // Clics nécessaires pour monter de niveau
- const MAX_LEVEL = 7; // Niveau max (10x10)
- 
- // ========== ÉLÉMENTS DU DOM ========== //
- const grid = document.getElementById("game-board");
- const scoreDisplay = document.getElementById("score");
- const timerDisplay = document.getElementById("timer");
- const gameOverDisplay = document.getElementById("game-over");
- const gameOverlay = document.getElementById("game-overlay");
- const finalScoreDisplay = document.getElementById("final-score");
- const restartBtn = document.getElementById("restart-btn");
- 
- 
- // ========== VARIABLES DU JEU ========== //
- let score = 0;
- let level = 1;
- let clicksInLevel = 0;
- let baseColor = getRandomColor();
- let darkerCellIndex;
- let timeLeft = TIME_LIMIT;
- let timerInterval;
- let isGameOver = false;
- 
- // ========== FONCTIONS PRINCIPALES ========== //
- 
- /** Génère une couleur aléatoire + sa version foncée */
- function getRandomColor() {
-     const hue = Math.floor(Math.random() * 360);
-     return {
-         base: `hsl(${hue}, 80%, 65%)`,
-         darker: `hsl(${hue}, 80%, 45%)`
-     };
- }
- 
- /** Crée la grille adaptée au niveau */
- function createGrid() {
-     grid.innerHTML = "";
-     
-     // Détermine la taille de la grille (4x4 → 10x10)
-     const gridSize = level + 3; 
-     // Calcule la taille des cases (décroissante)
-     const cellSize = Math.max(36, 80 - (level * 6)); 
-     
-     darkerCellIndex = Math.floor(Math.random() * (gridSize * gridSize));
-     
-     // Applique la taille dynamique
-     grid.style.gridTemplateColumns = `repeat(${gridSize}, ${cellSize}px)`;
-     
-     // Crée les cases
-     for (let i = 0; i < gridSize * gridSize; i++) {
-         const cell = document.createElement("div");
-         cell.className = "cell";
-         cell.style.backgroundColor = i === darkerCellIndex ? baseColor.darker : baseColor.base;
-         cell.addEventListener("click", () => handleClick(i));
-         grid.appendChild(cell);
-     }
- }
- 
- /** Gère le clic sur une case */
- function handleClick(index) {
-     if (isGameOver || index !== darkerCellIndex) return;
- 
-     // Met à jour le score
-     score++;
-     scoreDisplay.textContent = score;
-     clicksInLevel++;
- 
-     // Changement de niveau après 3 bonnes réponses
-     if (clicksInLevel >= CLICKS_TO_LEVEL_UP) {
-         level = Math.min(level + 1, MAX_LEVEL);
-         clicksInLevel = 0;
-         baseColor = getRandomColor();
-     }
-     createGrid();
- }
- // ========== FONCTION DE FIN DE JEU ========== //
- function showGameOver() {
-     finalScoreDisplay.textContent = `Score final : ${score}`;
-     gameOverlay.classList.remove("hidden");
- }
- 
- // ========== REDÉMARRAGE ========== //
- restartBtn.addEventListener("click", () => {
-     // Réinitialisation des variables
-     score = 0;
-     level = 1;
-     clicksInLevel = 0;
-     timeLeft = TIME_LIMIT;
-     isGameOver = false;
-     
-     // Mise à jour de l'affichage
-     scoreDisplay.textContent = "0";
-     timerDisplay.textContent = "03:00";
-     gameOverlay.classList.add("hidden");
-     
-     // Relance du jeu
-     baseColor = getRandomColor();
-     createGrid();
-     startTimer();
- });
- /** Lance le compte à rebours */
- function startTimer() {
-     timerInterval = setInterval(() => {
-         timeLeft--;
-         const minutes = Math.floor(timeLeft / 60).toString().padStart(2, '0');
-         const seconds = (timeLeft % 60).toString().padStart(2, '0');
-         timerDisplay.textContent = `${minutes}:${seconds}`;
- 
-         if (timeLeft <= 0) {
-             clearInterval(timerInterval);
-             isGameOver = true;
-             showGameOver(); // Remplace l'ancien affichage
-         }
-     }, 1000);
- }
- 
- // ========== INITIALISATION ========== //
- createGrid();
- startTimer();
+// CONFIG
+const TIME_LIMIT = 60;
+const CLICKS_TO_LEVEL_UP = 3;
+const MAX_LEVEL = 7;
+const MIN_CELL_SIZE = 30; // Taille minimale tactile
+
+// ÉLÉMENTS
+const elements = {
+    grid: document.getElementById("game-board"),
+    score: document.getElementById("score"),
+    timer: document.getElementById("timer"),
+    overlay: document.getElementById("game-overlay"),
+    finalScore: document.getElementById("final-score"),
+    restartBtn: document.getElementById("restart-btn")
+};
+
+// ÉTAT DU JEU
+const gameState = {
+    score: 0,
+    level: 1,
+    clicksInLevel: 0,
+    timeLeft: TIME_LIMIT,
+    isGameOver: false,
+    timer: null,
+    colors: getRandomColors(),
+    darkerIndex: null
+};
+
+// INITIALISATION
+function init() {
+    setupEventListeners();
+    resetGame();
+}
+
+// ÉVÉNEMENTS
+function setupEventListeners() {
+    elements.restartBtn.addEventListener("click", resetGame);
+    window.addEventListener("resize", debounce(createGrid, 100));
+}
+
+// FONCTIONS PRINCIPALES
+function createGrid() {
+    elements.grid.innerHTML = "";
+    
+    const gridSize = gameState.level + 3;
+    const availableWidth = Math.min(
+        window.innerWidth - 40, // Marge sécurité
+        window.innerHeight - 200 // Espace pour infos
+    );
+    const cellSize = Math.max(
+        MIN_CELL_SIZE,
+        Math.floor(availableWidth / (gridSize + 1)) // +1 pour l'espacement
+    );
+    
+    gameState.darkerIndex = Math.floor(Math.random() * (gridSize * gridSize));
+    elements.grid.style.gridTemplateColumns = `repeat(${gridSize}, ${cellSize}px)`;
+    
+    for (let i = 0; i < gridSize * gridSize; i++) {
+        const cell = document.createElement("div");
+        cell.className = "cell";
+        cell.style.backgroundColor = i === gameState.darkerIndex 
+            ? gameState.colors.darker 
+            : gameState.colors.base;
+        cell.addEventListener("click", () => handleCellClick(i));
+        elements.grid.appendChild(cell);
+    }
+}
+
+function handleCellClick(index) {
+    if (gameState.isGameOver || index !== gameState.darkerIndex) return;
+
+    gameState.score++;
+    gameState.clicksInLevel++;
+    elements.score.textContent = gameState.score;
+
+    if (gameState.clicksInLevel >= CLICKS_TO_LEVEL_UP) {
+        gameState.level = Math.min(gameState.level + 1, MAX_LEVEL);
+        gameState.clicksInLevel = 0;
+        gameState.colors = getRandomColors();
+    }
+    createGrid();
+}
+
+// UTILITAIRES
+function getRandomColors() {
+    const hue = Math.floor(Math.random() * 360);
+    return {
+        base: `hsl(${hue}, 80%, 65%)`,
+        darker: `hsl(${hue}, 80%, 45%)`
+    };
+}
+
+function debounce(func, wait) {
+    let timeout;
+    return function() {
+        clearTimeout(timeout);
+        timeout = setTimeout(func, wait);
+    };
+}
+
+// GESTION DU TEMPS
+function startTimer() {
+    clearInterval(gameState.timer);
+    
+    gameState.timer = setInterval(() => {
+        gameState.timeLeft--;
+        
+        const mins = String(Math.floor(gameState.timeLeft / 60)).padStart(2, '0');
+        const secs = String(gameState.timeLeft % 60).padStart(2, '0');
+        elements.timer.textContent = `${mins}:${secs}`;
+
+        if (gameState.timeLeft <= 0) {
+            endGame();
+        }
+    }, 1000);
+}
+
+function endGame() {
+    clearInterval(gameState.timer);
+    gameState.isGameOver = true;
+    elements.finalScore.textContent = `Score : ${gameState.score}`;
+    elements.overlay.classList.remove("hidden");
+}
+
+function resetGame() {
+    gameState.score = 0;
+    gameState.level = 1;
+    gameState.clicksInLevel = 0;
+    gameState.timeLeft = TIME_LIMIT;
+    gameState.isGameOver = false;
+    gameState.colors = getRandomColors();
+    
+    elements.score.textContent = "0";
+    elements.timer.textContent = "03:00";
+    elements.overlay.classList.add("hidden");
+    
+    createGrid();
+    startTimer();
+}
+
+// LANCEMENT
+init();
