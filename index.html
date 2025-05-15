@@ -1,18 +1,29 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="fr">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Jeu de la Case Plus Foncée</title>
     <link rel="stylesheet" href="style/style.css">
-    <title>Document</title>
 </head>
 <body>
-    <audio autoplay loop>
-        <source src="audios/intro.mp3" type="audio/mpeg">
-        Votre navigateur ne supporte pas l'audio HTML5.
-    </audio>
-    
-    <h1>Bienvenue dans Mon métier de rêve</h1>
-    <button onclick="window.location.href='jeu.html'">Démarrer</button>
+    <div class="game-container">
+        <h1>🌟 Trouve la Case Plus Foncée !</h1>
+        <div class="game-info">
+            <p>Score : <span id="score">0</span></p>
+            <p>Temps : <span id="timer">01:00</span></p>
+        </div>
+        <div id="game-board" class="grid"></div>
+        <div id="game-over"></div>
+    </div>
+    <div id="game-overlay" class="hidden">
+        <div class="game-over-box">
+            <h2>Jeu Terminé !</h2>
+            <p id="final-score">Score final : 0</p>
+            <button id="restart-btn">Rejouer</button>
+        </div>
+    </div>
+
+    <script src="js/script.js"></script>
 </body>
 </html>
