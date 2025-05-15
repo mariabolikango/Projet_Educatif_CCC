@@ -10,14 +10,13 @@ body {
 }
 
 .game-container {
-    width: calc(100% - 200px);
+    width: 95%;
     max-width: 800px;
-    margin: 100px auto;
+    margin: 20px auto;
     text-align: center;
     background-color: white;
-    padding: 20px;
-    border-radius: 15px;
-    box-shadow: 0 0 15px rgba(0,0,0,0.1);
+    padding: 15px;
+    box-sizing: border-box; /* Inclut padding dans le calcul de largeur */
 }
 
 h1 {
@@ -127,4 +126,143 @@ h1 {
 
 .hidden {
     display: none !important;
+}
+/* ===== [PARTIE RESPONSIVE] ===== */
+
+/* Conteneur principal adaptatif */
+
+
+/* Grille dynamique */
+.grid {
+    display: grid;
+    gap: 8px;
+    justify-content: center;
+    margin: 0 auto;
+    padding: 10px;
+    max-height: 70vh; /* Limite la hauteur */
+    overflow: hidden; /* Empêche le débordement */
+    width: fit-content; /* S'adapte au contenu */
+}
+
+/* Cases tactiles optimisées */
+.cell {
+    aspect-ratio: 1/1; /* Carré parfait */
+    min-width: 30px; /* Taille minimale tactile */
+    min-height: 30px;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: transform 0.2s, opacity 0.2s;
+}
+
+/* Overlay de fin fullscreen */
+#game-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background: rgba(0, 0, 0, 0.9);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+}
+
+/* Boîte de fin centrée */
+.game-over-box {
+    background: white;
+    padding: 25px;
+    border-radius: 15px;
+    text-align: center;
+    width: 85%;
+    max-width: 400px;
+}
+
+/* ===== MEDIA QUERIES ===== */
+
+/* Tablettes (600-900px) */
+@media (max-width: 900px) {
+    .grid {
+        gap: 6px;
+        padding: 8px;
+    }
+    .cell {
+        min-width: 28px;
+        min-height: 28px;
+    }
+}
+
+/* Mobiles (<600px) */
+@media (max-width: 600px) {
+    .game-container {
+        width: 100%;
+        padding: 10px;
+        margin: 10px auto;
+    }
+
+    h1 {
+        font-size: 1.5rem; /* Titre plus petit */
+        margin: 10px 0;
+    }
+
+    .game-info {
+        flex-direction: column; /* Empile score/timer */
+        gap: 8px;
+        font-size: 1.1rem;
+    }
+
+    .grid {
+        gap: 4px;
+        max-height: 60vh;
+    }
+
+    .cell {
+        min-width: 24px; /* Taille réduite mais cliquable */
+        min-height: 24px;
+        border-radius: 4px;
+    }
+
+    .game-over-box {
+        width: 90%;
+        padding: 20px 15px;
+    }
+
+    #restart-btn {
+        padding: 10px 20px;
+        font-size: 1rem;
+    }
+}
+
+/* Très petits mobiles (<400px) */
+@media (max-width: 400px) {
+    .cell {
+        min-width: 22px;
+        min-height: 22px;
+    }
+    .game-over-box h2 {
+        font-size: 1.8rem;
+    }
+}
+
+/* ===== ANIMATIONS ===== */
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+#game-overlay {
+    animation: fadeIn 0.3s ease-out;
+}
+
+.cell:hover {
+    transform: scale(1.05);
+    opacity: 0.9;
+}
+
+/* Garantit la visibilité sur fond sombre */
+#final-score {
+    color: #2c3e50;
+    font-weight: bold;
+    margin: 15px 0;
+    font-size: 1.3rem;
 }
